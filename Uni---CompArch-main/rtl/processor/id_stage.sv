@@ -208,7 +208,7 @@ assign rc_idx=if_id_IR[11:7];  // inst operand C register index
 always_comb begin : Hazard_Detection_Unit
 	case(if_id_IR[6:0])
 		//for standard
-		`R_TYPE: begin
+		`R_TYPE, `S_TYPE: begin
 			
 			if(ra_idx != 0 && (ra_idx == id_ex_dest_reg_idx || ra_idx == ex_mem_dest_reg_idx || ra_idx == mem_wb_dest_reg_idx) && ) 
 				id_hazard_flag = 1;
@@ -221,13 +221,14 @@ always_comb begin : Hazard_Detection_Unit
 		end
 
 		//for immediate
-		`I_ARITH_TYPE,`I_LD_TYPE,`S_TYPE: begin
+		`I_ARITH_TYPE,`I_LD_TYPE: begin
 			if(ra_idx != 0 && (ra_idx == id_ex_dest_reg_idx || ra_idx  == ex_mem_dest_reg_idx || ra_idx == mem_wb_dest_reg_idx))
 				id_hazard_flag = 1;
 
 			else 
 				id_hazard_flag = 0;
 		end
+
 	endcase
 end
 
