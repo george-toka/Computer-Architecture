@@ -47,12 +47,7 @@ always_ff @(posedge clk) begin
 		PC_reg <= next_PC; // transition to next PC
 end 
 
+assign if_valid_inst_out = 1;
 
-always_ff @(posedge clk) begin
-	if (rst)
-		if_valid_inst_out <= 1; 
-	else
-		if_valid_inst_out <= 1;
-end
 
 endmodule  // module if_stage
