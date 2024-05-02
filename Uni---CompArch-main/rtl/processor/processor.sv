@@ -202,6 +202,9 @@ id_stage id_stage_0 (
 .id_ex_IR				(id_ex_IR),
 .ex_mem_IR				(ex_mem_IR),
 .mem_wb_IR				(mem_wb_IR),
+.ex_alu_result_out		(ex_alu_result_out),
+.mem_result_out			(mem_result_out),
+.wb_reg_wr_data_out		(wb_reg_wr_data_out),
 
 
 // Outputs
