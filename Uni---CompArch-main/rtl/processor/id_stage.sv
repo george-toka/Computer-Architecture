@@ -163,12 +163,21 @@ input logic [31:0] 	if_id_IR,            	// incoming instruction
 input logic [31:0]	if_id_PC,
 input logic	        mem_wb_valid_inst,   	 	//Does the instruction write to rd?
 input logic	        mem_wb_reg_wr,   	 	//Does the instruction write to rd?
+
 input logic [4:0]	mem_wb_dest_reg_idx, 	//index of rd
 input logic [4:0]	id_ex_dest_reg_idx,
 input logic [4:0]	ex_mem_dest_reg_idx,
+
 input logic [31:0] 	wb_reg_wr_data_out, 	// Reg write data from WB Stage
 input logic         if_id_valid_inst,
+
+input logic [31:0]  id_ex_IR,				//check for lw hazard
+input logic [31:0]  ex_mem_IR,
+input logic [31:0]  mem_wb_IR,
   
+input logic [31:0]  ex_alu_result_out,		//for forwarding
+input logic [31:0]  mem_result_out,
+input logic [31:0]  wb_reg_wr_data_out,
 
 output logic [31:0] id_ra_value_out,    	// reg A value
 output logic [31:0] id_rb_value_out,    	// reg B value
@@ -188,11 +197,11 @@ output logic 		cond_branch,
 output logic        uncond_branch,
 output logic       	id_illegal_out,
 output logic       	id_valid_inst_out,	  	// is inst a valid instruction to be counted for CPI calculations?
-output logic 		id_hazard_flag
+output logic 		id_stall_flag
 );
    
 logic dest_reg_select;
-logic [31:0] rb_val;
+logic [31:0] ra_val,rb_val;
 
 //instruction fields read from IF/ID pipeline register
 logic[4:0] ra_idx; 
@@ -204,34 +213,128 @@ assign ra_idx=if_id_IR[19:15];	// inst operand A register index
 assign rb_idx=if_id_IR[24:20];	// inst operand B register index
 assign rc_idx=if_id_IR[11:7];  // inst operand C register index
 
-//Hazard Detection Unit (feedback to IF stage)
-always_comb begin : Hazard_Detection_Unit
+//Hazard Detection and Forwarding Unit (feedback to IF stage and ID/EX IF/ID Registers)
+//Encoding for forwarding (see forwarding_labels)
+logic rega_stall,regb_stall;
+logic [1:0] forwarding_labels_rega, forwarding_labels_regb;
+
+always_comb begin : Hazard_Detection_And_Forwarding_Unit
 	case(if_id_IR[6:0])
 		//for standard
-		`R_TYPE, `S_TYPE: begin
-			
-			if(ra_idx != 0 && (ra_idx == id_ex_dest_reg_idx || ra_idx == ex_mem_dest_reg_idx || ra_idx == mem_wb_dest_reg_idx) && ) 
-				id_hazard_flag = 1;
+		`R_TYPE, `S_TYPE: begin	
+			if(ra_idx != 0) begin
+				if(ra_idx == id_ex_dest_reg_idx) begin
+					if(id_ex_IR[6:0] == `I_LD_TYPE) 
+						rega_stall = 1;
+					else begin
+						rega_stall = 0;
+						forwarding_labels_rega = 2'b01;
+					end
+				end
 
-			else if(rb_idx != 0 && (rb_idx == id_ex_dest_reg_idx || rb_idx == ex_mem_dest_reg_idx || rb_idx == mem_wb_dest_reg_idx)) 
-				id_hazard_flag = 1;
+				else if(ra_idx == ex_mem_dest_reg_idx) begin
+					if(ex_mem_IR[6:0] == `I_LD_TYPE) 
+						rega_stall = 1;
+					else begin
+						rega_stall = 0;
+						forwarding_labels_rega = 2'b10;
+					end
+				end
 
-			else 
-				id_hazard_flag = 0;
+				else if(ra_idx == mem_wb_dest_reg_idx) begin
+					if(mem_wb_IR[6:0] == `I_LD_TYPE) 
+						rega_stall = 1;
+					else begin
+						rega_stall = 0;
+						forwarding_labels_rega = 2'b11;
+					end
+				end
+
+				else begin
+					rega_stall = 0;
+					forwarding_labels_rega = 2'b00;
+				end
+			end
+
+			if(rb_idx != 0) begin
+				if(rb_idx == id_ex_dest_reg_idx) begin
+					if(id_ex_IR[6:0] == `I_LD_TYPE) 
+						regb_stall = 1;
+					else begin
+						regb_stall = 0;
+						forwarding_labels_regb = 2'b01;
+					end
+				end
+
+				else if(rb_idx == ex_mem_dest_reg_idx) begin
+					if(ex_mem_IR[6:0] == `I_LD_TYPE) 
+						regb_stall = 1;
+					else begin
+						regb_stall = 0;
+						forwarding_labels_regb = 2'b10;
+					end
+				end
+
+				else if(rb_idx == mem_wb_dest_reg_idx) begin
+					if(mem_wb_IR[6:0] == `I_LD_TYPE) 
+						regb_stall = 1;
+					else begin
+						regb_stall = 0;
+						forwarding_labels_regb = 2'b11;
+					end
+				end
+
+				else begin
+					regb_stall = 0;
+					forwarding_labels_regb = 2'b00;
+				end
+			end
+
+			id_stall_flag = rega_stall || regb_stall;
 		end
 
-		//for immediate
+		//for immediate - load - store
 		`I_ARITH_TYPE,`I_LD_TYPE: begin
-			if(ra_idx != 0 && (ra_idx == id_ex_dest_reg_idx || ra_idx  == ex_mem_dest_reg_idx || ra_idx == mem_wb_dest_reg_idx))
-				id_hazard_flag = 1;
+			if(ra_idx != 0) begin
+				if(ra_idx == id_ex_dest_reg_idx) begin
+					if(id_ex_IR[6:0] == `I_LD_TYPE) 
+						rega_stall = 1;
+					else begin
+						rega_stall = 0;
+						forwarding_labels_rega = 2'b01;
+					end
+				end
 
-			else 
-				id_hazard_flag = 0;
+				else if(ra_idx == ex_mem_dest_reg_idx) begin
+					if(ex_mem_IR[6:0] == `I_LD_TYPE) 
+						rega_stall = 1;
+					else begin
+						rega_stall = 0;
+						forwarding_labels_rega = 2'b10;
+					end
+				end
+
+				else if(ra_idx == mem_wb_dest_reg_idx) begin
+					if(mem_wb_IR[6:0] == `I_LD_TYPE) 
+						rega_stall = 1;
+					else begin
+						rega_stall = 0;
+						forwarding_labels_rega = 2'b11;
+					end
+				end
+
+				else begin
+					rega_stall = 0;
+					forwarding_labels_rega = 2'b00;
+				end
+			end
+
+			forwarding_labels_regb = 2'b00;
+			id_stall_flag = rega_stall;
 		end
 
 	endcase
 end
-
 
 
 // Instantiate the register file used by this pipeline
@@ -242,14 +345,29 @@ assign write_en=mem_wb_valid_inst & mem_wb_reg_wr;
 regfile regf_0(.clk		(clk),
 			   .rst		(rst),
 			   .rda_idx	(ra_idx),
-			   .rda_out	(id_ra_value_out), 
+			   .rda_out	(ra_val), 
 			   .rdb_idx	(rb_idx),
 			   .rdb_out	(rb_val), 
 			   .wr_en	(write_en),
 			   .wr_idx	(mem_wb_dest_reg_idx),
 			   .wr_data	(wb_reg_wr_data_out));
 
-assign id_rb_value_out=rb_val;
+//forwarding (or not)
+always_comb begin
+	case(forwarding_labels_rega) 
+		2'b00: id_ra_value_out = ra_val;
+		2'b01: id_ra_value_out = ex_alu_result_out;
+		2'b10: id_ra_value_out = mem_result_out;
+		2'b11: id_ra_value_out = wb_reg_wr_data_out;
+	endcase
+
+	case(forwarding_labels_regb) 
+		2'b00: id_rb_value_out = rb_val;
+		2'b01: id_rb_value_out = ex_alu_result_out;
+		2'b10: id_rb_value_out = mem_result_out;
+		2'b11: id_rb_value_out = wb_reg_wr_data_out;
+	endcase
+end
 
 // instantiate the instruction inst_decoder
 inst_decoder inst_decoder_0(.inst	        (if_id_IR),

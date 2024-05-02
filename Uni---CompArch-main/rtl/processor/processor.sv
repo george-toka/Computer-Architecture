@@ -71,7 +71,7 @@ logic         	id_valid_inst_out;
 logic 			id_uncond_branch;
 logic 			id_cond_branch;
 logic [31:0]    id_pc_add_opa;
-logic 			id_hazard_flag;
+logic 			id_stall_flag;
 
 // Outputs from ID/EX Pipeline Register
 logic 			id_ex_reg_wr;
@@ -148,7 +148,7 @@ if_stage if_stage_0 (
 .ex_take_branch_out	(ex_take_branch_out),
 .ex_target_PC_out	(ex_target_PC_out),
 .Imem2proc_data		(instruction),
-.id_hazard_flag		(id_hazard_flag),
+.id_stall_flag		(id_stall_flag),
 
 // Outputs
 .if_NPC_out			(if_NPC_out),
@@ -163,7 +163,7 @@ if_stage if_stage_0 (
 //            IF/ID Pipeline Register           //
 //                                              //
 //////////////////////////////////////////////////
-assign if_id_enable = ~id_hazard_flag; // disabled when HzDU initiates a stall
+assign if_id_enable = ~id_stall_flag; // disabled when HzDU initiates a stall
 
 always_ff @(posedge clk or posedge rst) begin
 	if(rst | ex_take_branch_out) begin
@@ -199,6 +199,10 @@ id_stage id_stage_0 (
 .mem_wb_reg_wr			(mem_wb_reg_wr), 
 .wb_reg_wr_data_out     (wb_reg_wr_data_out),  	
 .if_id_valid_inst       (if_id_valid_inst),
+.id_ex_IR				(id_ex_IR),
+.ex_mem_IR				(ex_mem_IR),
+.mem_wb_IR				(mem_wb_IR),
+
 
 // Outputs
 .id_reg_wr_out          (id_reg_wr_out),
@@ -217,7 +221,7 @@ id_stage id_stage_0 (
 .uncond_branch			(id_uncond_branch),
 .id_illegal_out			(id_illegal_out),
 .id_valid_inst_out		(id_valid_inst_out),
-.id_hazard_flag			(id_hazard_flag)
+.id_stall_flag			(id_stall_flag)
 );
 
 
@@ -230,7 +234,7 @@ id_stage id_stage_0 (
 assign id_ex_enable = 1;
 // synopsys sync_set_rst "rst"
 always_ff @(posedge clk or posedge rst) begin
-	if (rst | ex_take_branch_out | id_hazard_flag) begin //sys_rst
+	if (rst | ex_take_branch_out | id_stall_flag) begin //sys_rst
 		//Control
 		id_ex_funct3		<=  0;
 		id_ex_opa_select    <=  `ALU_OPA_IS_REGA;
