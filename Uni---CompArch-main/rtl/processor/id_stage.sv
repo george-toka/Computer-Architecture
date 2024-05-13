@@ -331,7 +331,12 @@ always_comb begin : Hazard_Detection_And_Forwarding_Unit
 			forwarding_labels_regb = 2'b00;
 			id_stall_flag = rega_stall;
 		end
-
+		
+		default : begin
+			id_stall_flag = 0;
+			forwarding_labels_rega = 2'b00;
+			forwarding_labels_regb = 2'b00;
+		end
 	endcase
 end
 
