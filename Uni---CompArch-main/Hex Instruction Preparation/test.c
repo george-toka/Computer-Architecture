@@ -1,18 +1,18 @@
-int a = 5;
-int b = 8;
 int main() {
+    int a = 3;
+    int b = 2;
+    int c = 0;
+    int result ;
 
-    int result;
-    int temp;
     // Perform multiplication
-    result = a * b;
-    temp = result + a;
-
-    // Use the result in a way that prevents optimization
-    if(result < temp) {
+    for (int i=0; i<5; i++){
+        a = a*b;
+        c = a+b;
+    }
+    result = a + c;
+    if(result < 5) {
         return -1;
     } else {
         return 0;
     }
 }
-
