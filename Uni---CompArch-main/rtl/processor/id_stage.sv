@@ -220,7 +220,7 @@ logic [1:0] forwarding_labels_rega, forwarding_labels_regb;
 always_comb begin : Hazard_Detection_And_Forwarding_Unit
 	case(if_id_IR[6:0])
 		//for standard
-		`R_TYPE, `S_TYPE: begin	
+		`R_TYPE, `S_TYPE, `B_TYPE: begin	
 			//check for rega
 			if(ra_idx != 0) begin
 				if(ra_idx == id_ex_dest_reg_idx) begin
@@ -344,7 +344,7 @@ always_comb begin : Hazard_Detection_And_Forwarding_Unit
 				rega_stall = 0;
 				forwarding_labels_rega = 2'b00;
 			end
-			
+
 			forwarding_labels_regb = 2'b00;
 			id_stall_flag = rega_stall;
 		end
