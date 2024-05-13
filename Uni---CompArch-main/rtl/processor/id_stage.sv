@@ -177,7 +177,6 @@ input logic [31:0]  mem_wb_IR,
   
 input logic [31:0]  ex_alu_result_out,		//for forwarding
 input logic [31:0]  mem_result_out,
-input logic [31:0]  wb_reg_wr_data_out,
 
 output logic [31:0] id_ra_value_out,    	// reg A value
 output logic [31:0] id_rb_value_out,    	// reg B value
