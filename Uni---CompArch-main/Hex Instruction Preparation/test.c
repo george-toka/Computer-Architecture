@@ -2,7 +2,7 @@ int main() {
     int a = 3;
     int b = 2;
     int c = 0;
-    int result ;
+    int result;
 
     // Perform multiplication
     for (int i=0; i<5; i++){
