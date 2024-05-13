@@ -221,6 +221,7 @@ always_comb begin : Hazard_Detection_And_Forwarding_Unit
 	case(if_id_IR[6:0])
 		//for standard
 		`R_TYPE, `S_TYPE: begin	
+			//check for rega
 			if(ra_idx != 0) begin
 				if(ra_idx == id_ex_dest_reg_idx) begin
 					if(id_ex_IR[6:0] == `I_LD_TYPE) 
@@ -255,6 +256,12 @@ always_comb begin : Hazard_Detection_And_Forwarding_Unit
 				end
 			end
 
+			else begin
+				rega_stall = 0;
+				forwarding_labels_rega = 2'b00;
+			end
+
+			//check regb
 			if(rb_idx != 0) begin
 				if(rb_idx == id_ex_dest_reg_idx) begin
 					if(id_ex_IR[6:0] == `I_LD_TYPE) 
@@ -287,6 +294,11 @@ always_comb begin : Hazard_Detection_And_Forwarding_Unit
 					regb_stall = 0;
 					forwarding_labels_regb = 2'b00;
 				end
+			end
+
+			else begin
+				regb_stall = 0;
+				forwarding_labels_regb = 2'b00;
 			end
 
 			id_stall_flag = rega_stall || regb_stall;
@@ -328,6 +340,11 @@ always_comb begin : Hazard_Detection_And_Forwarding_Unit
 				end
 			end
 
+			else begin
+				rega_stall = 0;
+				forwarding_labels_rega = 2'b00;
+			end
+			
 			forwarding_labels_regb = 2'b00;
 			id_stall_flag = rega_stall;
 		end
@@ -339,7 +356,6 @@ always_comb begin : Hazard_Detection_And_Forwarding_Unit
 		end
 	endcase
 end
-
 
 // Instantiate the register file used by this pipeline
 
