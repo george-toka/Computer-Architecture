@@ -233,12 +233,8 @@ always_comb begin : Hazard_Detection_And_Forwarding_Unit
 				end
 
 				else if(ra_idx == ex_mem_dest_reg_idx) begin
-					if(ex_mem_IR[6:0] == `I_LD_TYPE) 
-						rega_stall = 1;
-					else begin
-						rega_stall = 0;
-						forwarding_labels_rega = 2'b10;
-					end
+					rega_stall = 0;
+					forwarding_labels_rega = 2'b10;					
 				end
 
 				else if(ra_idx == mem_wb_dest_reg_idx) begin
@@ -273,12 +269,9 @@ always_comb begin : Hazard_Detection_And_Forwarding_Unit
 				end
 
 				else if(rb_idx == ex_mem_dest_reg_idx) begin
-					if(ex_mem_IR[6:0] == `I_LD_TYPE) 
-						regb_stall = 1;
-					else begin
-						regb_stall = 0;
-						forwarding_labels_regb = 2'b10;
-					end
+					regb_stall = 0;
+					forwarding_labels_regb = 2'b10;
+					
 				end
 
 				else if(rb_idx == mem_wb_dest_reg_idx) begin
@@ -317,21 +310,13 @@ always_comb begin : Hazard_Detection_And_Forwarding_Unit
 				end
 
 				else if(ra_idx == ex_mem_dest_reg_idx) begin
-					if(ex_mem_IR[6:0] == `I_LD_TYPE) 
-						rega_stall = 1;
-					else begin
-						rega_stall = 0;
-						forwarding_labels_rega = 2'b10;
-					end
+					rega_stall = 0;
+					forwarding_labels_rega = 2'b10;
 				end
 
 				else if(ra_idx == mem_wb_dest_reg_idx) begin
-					if(mem_wb_IR[6:0] == `I_LD_TYPE) 
-						rega_stall = 1;
-					else begin
-						rega_stall = 0;
-						forwarding_labels_rega = 2'b11;
-					end
+					rega_stall = 0;
+					forwarding_labels_rega = 2'b11;
 				end
 
 				else begin
